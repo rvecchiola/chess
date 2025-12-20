@@ -1,7 +1,8 @@
 from flask import render_template, request, jsonify
 import chess
+import random
 
-# Global board
+# Global board for single-player vs AI
 board = chess.Board()
 
 def register_routes(app):
@@ -19,9 +20,15 @@ def register_routes(app):
         move_uci = from_square + to_square
 
         try:
-            move = chess.Move.from_uci(move_uci)
-            if move in board.legal_moves:
-                board.push(move)
+            player_move = chess.Move.from_uci(move_uci)
+            if player_move in board.legal_moves:
+                board.push(player_move)
+
+                # AI move (random)
+                if not board.is_game_over():
+                    ai_move = random.choice(list(board.legal_moves))
+                    board.push(ai_move)
+
                 turn = 'white' if board.turn == chess.WHITE else 'black'
                 check = board.is_check()
                 checkmate = board.is_checkmate()
