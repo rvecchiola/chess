@@ -12,7 +12,7 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.status === "ok") {
                         board.position(response.fen);
-                        updateStatus(response.turn, response.check);
+                        updateStatus(response.turn, response.check, response.checkmate, response.stalemate);
                     } else {
                         board.position(oldPos);
                         alert("Illegal move!");
@@ -30,18 +30,27 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.status === "ok") {
                     board.start();
-                    updateStatus('white', false);
+                    updateStatus('white', false, false, false);
                 }
             }
         });
     });
 
     // Function to update status div
-    function updateStatus(turn, check) {
-        let statusText = (turn === 'white') ? "White's turn" : "Black's turn";
-        if (check) {
-            statusText += " - Check!";
+    function updateStatus(turn, check, checkmate, stalemate) {
+        let statusText = "";
+
+        if (checkmate) {
+            statusText = (turn === 'white' ? "Black" : "White") + " wins by checkmate!";
+        } else if (stalemate) {
+            statusText = "Draw by stalemate!";
+        } else {
+            statusText = (turn === 'white') ? "White's turn" : "Black's turn";
+            if (check) {
+                statusText += " - Check!";
+            }
         }
+
         $("#game-status").text(statusText);
     }
 });

@@ -23,9 +23,20 @@ def move():
         move = chess.Move.from_uci(move_uci)
         if move in board.legal_moves:
             board.push(move)
+
             turn = 'white' if board.turn == chess.WHITE else 'black'
             check = board.is_check()
-            return jsonify({"status": "ok", "fen": board.fen(), "turn": turn, "check": check})
+            checkmate = board.is_checkmate()
+            stalemate = board.is_stalemate()
+
+            return jsonify({
+                "status": "ok",
+                "fen": board.fen(),
+                "turn": turn,
+                "check": check,
+                "checkmate": checkmate,
+                "stalemate": stalemate
+            })
         else:
             return jsonify({"status": "illegal"})
     except:
