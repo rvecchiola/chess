@@ -3,15 +3,22 @@ $(document).ready(function () {
     let board;
     let pendingPromotion = null;
     let lastPosition = null;   // NEW - always store before move
+    let currentTurn = 'white';  // Track whose turn it is
 
     board = Chessboard('board', {
         draggable: true,
         position: 'start',
         pieceTheme: '/static/images/chesspieces/wikipedia/{piece}.png',
 
-        onDragStart: function () {
+        onDragStart: function (source, piece) {
             // snapshot BEFORE illegal moves
             lastPosition = board.position();
+
+            // Prevent dragging opponent's pieces
+            const pieceColor = piece.startsWith('w') ? 'white' : 'black';
+            if (pieceColor !== currentTurn) {
+                return false;  // Prevent drag
+            }
         },
 
         onDrop: function (source, target, piece) {
@@ -57,6 +64,7 @@ $(document).ready(function () {
                     pendingPromotion = null;
 
                     board.position(response.fen);
+                    currentTurn = response.turn;  // Update current turn
                     updateStatus(response.turn, response.check, response.checkmate, response.stalemate);
                     updateMoveHistory(response.move_history);
                     updateCaptured(response.captured_pieces);
@@ -146,6 +154,7 @@ $(document).ready(function () {
             if (response.status === "ok") {
                 pendingPromotion = null;
                 lastPosition = null;
+                currentTurn = 'white';  // Reset to white's turn
                 board.start();
                 updateStatus('white', false, false, false);
                 updateMoveHistory([]);

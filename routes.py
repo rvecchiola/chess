@@ -36,9 +36,9 @@ def register_routes(app):
             move = chess.Move.from_uci(uci)
             legal_moves = [m.uci() for m in board.legal_moves]
 
-            print("Legal moves:", legal_moves)
+            # print("Legal moves:", legal_moves)
 
-            if move not in board.legal_moves:
+            if uci not in legal_moves:
                 print("Move is illegal")
                 return jsonify({"status": "illegal", "fen": board.fen()})
 
@@ -60,22 +60,22 @@ def register_routes(app):
             move_history.append(move_san)
 
             # AI automatically moves
-            if not board.is_game_over():
-                ai_move = random.choice(list(board.legal_moves))
-                ai_san = board.san(ai_move)
+            # if not board.is_game_over():
+            #     ai_move = random.choice(list(board.legal_moves))
+            #     ai_san = board.san(ai_move)
 
-                if board.is_capture(ai_move):
-                    if board.is_en_passant(ai_move):
-                        captured_piece = chess.Piece(chess.PAWN, not board.turn)
-                    else:
-                        captured_piece = board.piece_at(ai_move.to_square)
-                    if captured_piece:
-                        color_key = "white" if captured_piece.color == chess.WHITE else "black"
-                        captured_pieces[color_key].append(captured_piece.symbol())
-                        print("AI captured:", captured_piece.symbol())
+            #     if board.is_capture(ai_move):
+            #         if board.is_en_passant(ai_move):
+            #             captured_piece = chess.Piece(chess.PAWN, not board.turn)
+            #         else:
+            #             captured_piece = board.piece_at(ai_move.to_square)
+            #         if captured_piece:
+            #             color_key = "white" if captured_piece.color == chess.WHITE else "black"
+            #             captured_pieces[color_key].append(captured_piece.symbol())
+            #             print("AI captured:", captured_piece.symbol())
 
-                board.push(ai_move)
-                move_history.append(ai_san)
+            #     board.push(ai_move)
+            #     move_history.append(ai_san)
 
             turn = "white" if board.turn == chess.WHITE else "black"
             check = board.is_check()
