@@ -1,22 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Tob's Chess</title>
+    <title>rob' Flask Chess AI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chessboard-1.0.0.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/x-icon">
 </head>
 <body>
-    <h1>Rob's Chess</h1>
-    <div id="game-status">White's turn</div>
-    <div id="board"></div>
-    <button id="reset-btn">New Game</button>
+    <h1>rob's Flask Chess AI</h1>
 
-    <!-- jQuery -->
+    <div id="game-info">
+        <div id="game-status">White's turn</div>
+        <div id="captured-pieces">
+            <div>White captured: <span id="white-captured"></span></div>
+            <div>Black captured: <span id="black-captured"></span></div>
+        </div>
+        <div>Move history:</div>
+        <ol id="move-history"></ol>
+        <button id="reset-btn">New Game</button>
+    </div>
+
+    <div id="board"></div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- chessboard.js -->
     <script src="{{ url_for('static', filename='js/chessboard-1.0.0.min.js') }}"></script>
-    <!-- Board initialization -->
     <script src="{{ url_for('static', filename='js/chessboard-init.js') }}"></script>
 </body>
 </html>

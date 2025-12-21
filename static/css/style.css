@@ -3,17 +3,23 @@
     margin: 20px auto;
 }
 
-h1 {
-    text-align: center;
+#game-info {
+    width: 400px;
+    margin: 10px auto;
     font-family: Arial, sans-serif;
 }
 
-button {
-    display: block;
-    margin: 10px auto;
-    padding: 8px 16px;
-    font-size: 16px;
-    cursor: pointer;
+#captured-pieces {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+#move-history {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 5px;
 }
 
 button#reset-btn {
@@ -22,12 +28,4 @@ button#reset-btn {
     padding: 8px 16px;
     font-size: 16px;
     cursor: pointer;
-}
-
-#game-status {
-    text-align: center;
-    font-size: 18px;
-    margin-bottom: 10px;
-    font-weight: bold;
-    color: #333;
 }
