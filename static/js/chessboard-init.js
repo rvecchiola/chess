@@ -21,6 +21,7 @@ $(document).ready(function () {
             if (promotionCheck.promotionNeeded) {
 
                 pendingPromotion = { source, target, oldPos: lastPosition };
+                board.draggable = false;  // Disable dragging during promotion choice
 
                 showPromotionDialog(function(selectedPiece) {
                     sendMove(pendingPromotion.source, pendingPromotion.target, selectedPiece);
@@ -36,6 +37,8 @@ $(document).ready(function () {
     // Send move to server
     function sendMove(source, target, promotionPiece=null) {
 
+        board.draggable = false;  // Disable dragging during move
+
         const payload = { from: source, to: target };
         if (promotionPiece) payload.promotion = promotionPiece;
 
@@ -46,6 +49,8 @@ $(document).ready(function () {
             data: JSON.stringify(payload),
 
             success: function (response) {
+
+                board.draggable = true;  // Re-enable dragging
 
                 if (response.status === "ok") {
 
@@ -63,9 +68,11 @@ $(document).ready(function () {
                 }
             },
 
-            error: function() {
+            error: function(xhr) {
+                board.draggable = true;  // Re-enable dragging
                 rollbackPosition();
-                alert("Server error");
+                const errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Server error";
+                alert(errorMsg);
             }
         });
     }
@@ -84,7 +91,7 @@ $(document).ready(function () {
     function detectPromotion(source, target, piece) {
 
         // only trigger for pawn
-        if (!piece.toLowerCase().includes('p')) {
+        if (piece[1] !== 'P') {
             return { promotionNeeded: false };
         }
 
@@ -116,6 +123,7 @@ $(document).ready(function () {
             <button class="promote" data-piece="r">Rook</button>
             <button class="promote" data-piece="b">Bishop</button>
             <button class="promote" data-piece="n">Knight</button>
+            <button id="cancel-promotion">Cancel</button>
         </div>`;
 
         $("body").append(html);
@@ -124,6 +132,12 @@ $(document).ready(function () {
             const selectedPiece = $(this).data("piece");
             $("#promotion-dialog").remove();
             callback(selectedPiece);
+        });
+
+        $("#cancel-promotion").click(function() {
+            $("#promotion-dialog").remove();
+            board.draggable = true;  // Re-enable dragging on cancel
+            rollbackPosition();
         });
     }
 
@@ -149,10 +163,12 @@ $(document).ready(function () {
     }
 
     function updateMoveHistory(history) {
+        if (!Array.isArray(history)) return;
         $("#move-history").html(history.map(m => `<li>${m}</li>`).join(""));
     }
 
     function updateCaptured(captured) {
+        if (!captured || !captured.white || !captured.black) return;
         $("#white-captured").text(captured.white.join(" "));
         $("#black-captured").text(captured.black.join(" "));
     }

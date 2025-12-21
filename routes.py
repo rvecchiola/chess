@@ -47,11 +47,14 @@ def register_routes(app):
 
             # Track capture by player
             if board.is_capture(move):
-                captured = board.piece_at(move.to_square)
-                if captured:
-                    color_key = "white" if captured.color == chess.WHITE else "black"
-                    captured_pieces[color_key].append(captured.symbol())
-                    print("Player captured:", captured.symbol())
+                if board.is_en_passant(move):
+                    captured_piece = chess.Piece(chess.PAWN, not board.turn)
+                else:
+                    captured_piece = board.piece_at(move.to_square)
+                if captured_piece:
+                    color_key = "white" if captured_piece.color == chess.WHITE else "black"
+                    captured_pieces[color_key].append(captured_piece.symbol())
+                    print("Player captured:", captured_piece.symbol())
 
             board.push(move)
             move_history.append(move_san)
@@ -62,11 +65,14 @@ def register_routes(app):
                 ai_san = board.san(ai_move)
 
                 if board.is_capture(ai_move):
-                    captured = board.piece_at(ai_move.to_square)
-                    if captured:
-                        color_key = "white" if captured.color == chess.WHITE else "black"
-                        captured_pieces[color_key].append(captured.symbol())
-                        print("AI captured:", captured.symbol())
+                    if board.is_en_passant(ai_move):
+                        captured_piece = chess.Piece(chess.PAWN, not board.turn)
+                    else:
+                        captured_piece = board.piece_at(ai_move.to_square)
+                    if captured_piece:
+                        color_key = "white" if captured_piece.color == chess.WHITE else "black"
+                        captured_pieces[color_key].append(captured_piece.symbol())
+                        print("AI captured:", captured_piece.symbol())
 
                 board.push(ai_move)
                 move_history.append(ai_san)
