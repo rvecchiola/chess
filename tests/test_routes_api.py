@@ -6,6 +6,7 @@ from app import app  # make sure your Flask app is imported correctly
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
+    app.config['AI_ENABLED'] = False
     with app.test_client() as client:
         yield client
 
@@ -45,9 +46,10 @@ def test_illegal_move(client):
     assert rv["status"] == "illegal"
 
 def test_promotion(client):
+    app.config['AI_ENABLED'] = False
     reset_board(client)
     # Move a white pawn to promotion square
-    moves = [("h2", "h4"), ("g7", "g5"), ("h4", "h5"), ("g5", "g4"), ("h5", "h6"), ("g4", "g3"), ("h6", "h7")]
+    moves = [("h2", "h4"), ("a7", "a6"), ("h4", "h5"), ("a6", "a5"), ("h5", "h6"), ("a5", "a4"), ("h6", "h7"), ("a4", "a3")]
     for from_sq, to_sq in moves:
         make_move(client, from_sq, to_sq)
     # Now promote pawn to queen
@@ -58,6 +60,7 @@ def test_promotion(client):
     assert piece.symbol().upper() == "Q"
 
 def test_capture(client):
+    app.config['AI_ENABLED'] = False
     reset_board(client)
     # Move white pawn to capture
     make_move(client, "e2", "e4")
@@ -69,6 +72,7 @@ def test_capture(client):
     assert piece.symbol() == "P"
 
 def test_en_passant(client):
+    app.config['AI_ENABLED'] = False
     reset_board(client)
     # Set up en passant via API
     make_move(client, "e2", "e4")
@@ -80,3 +84,16 @@ def test_en_passant(client):
     board = chess.Board(rv["fen"])
     assert board.piece_at(chess.F5) is None
     assert board.piece_at(chess.F6).symbol() == "P"
+
+def test_game_over_fields(client):
+    app.config['AI_ENABLED'] = False
+    reset_board(client)
+    rv = client.post('/reset')
+    data = rv.get_json()
+    assert data['status'] == 'ok'
+    # After reset, not game over
+    assert 'game_over' in data
+    assert data['game_over'] == False
+    assert data['fifty_moves'] == False
+    assert data['repetition'] == False
+    assert data['insufficient_material'] == False

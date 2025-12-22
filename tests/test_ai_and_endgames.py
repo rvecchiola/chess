@@ -6,6 +6,7 @@ from tests.test_routes_api import make_move, reset_board
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
+    app.config['AI_ENABLED'] = True
     with app.test_client() as client:
         yield client
 
@@ -18,6 +19,7 @@ def test_ai_move_is_legal(client):
     assert all(move in board.legal_moves for move in board.legal_moves)
 
 def test_check_detection(client):
+    app.config['AI_ENABLED'] = False
     reset_board(client)
     # Fool's mate setup via moves
     moves = [("f2","f3"), ("e7","e5"), ("g2","g4"), ("d8","h4")]
@@ -28,6 +30,7 @@ def test_check_detection(client):
     assert board.is_check() == True
 
 def test_checkmate_detection(client):
+    app.config['AI_ENABLED'] = False
     reset_board(client)
     # Fool's mate
     moves = [("f2","f3"), ("e7","e5"), ("g2","g4"), ("d8","h4")]

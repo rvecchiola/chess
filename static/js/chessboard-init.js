@@ -4,6 +4,7 @@ $(document).ready(function () {
     let pendingPromotion = null;
     let lastPosition = null;   // NEW - always store before move
     let currentTurn = 'white';  // Track whose turn it is
+    let isGameOver = false;     // Track if game is over
 
     board = Chessboard('board', {
         draggable: true,
@@ -14,9 +15,9 @@ $(document).ready(function () {
             // snapshot BEFORE illegal moves
             lastPosition = board.position();
 
-            // Prevent dragging opponent's pieces
+            // Prevent dragging if game over or opponent's pieces
             const pieceColor = piece.startsWith('w') ? 'white' : 'black';
-            if (pieceColor !== currentTurn) {
+            if (isGameOver || pieceColor !== currentTurn) {
                 return false;  // Prevent drag
             }
         },
@@ -65,7 +66,8 @@ $(document).ready(function () {
 
                     board.position(response.fen);
                     currentTurn = response.turn;  // Update current turn
-                    updateStatus(response.turn, response.check, response.checkmate, response.stalemate);
+                    isGameOver = response.game_over;  // Update game over status
+                    updateStatus(response.turn, response.check, response.checkmate, response.stalemate, response.fifty_moves, response.repetition, response.insufficient_material, response.game_over);
                     updateMoveHistory(response.move_history);
                     updateCaptured(response.captured_pieces);
 
@@ -155,19 +157,25 @@ $(document).ready(function () {
                 pendingPromotion = null;
                 lastPosition = null;
                 currentTurn = 'white';  // Reset to white's turn
+                isGameOver = false;      // Reset game over status
                 board.start();
-                updateStatus('white', false, false, false);
+                updateStatus('white', false, false, false, false, false, false, false);
                 updateMoveHistory([]);
                 updateCaptured({ white: [], black: [] });
             }
         });
     });
 
-    function updateStatus(turn, check, checkmate, stalemate) {
-        let status = turn === 'white' ? "White's turn" : "Black's turn";
-        if (check) status += " - Check!";
-        if (checkmate) status = turn === 'white' ? "Black wins — Checkmate!" : "White wins — Checkmate!";
-        if (stalemate) status = "Draw by stalemate";
+    function updateStatus(turn, check, checkmate, stalemate, fifty_moves, repetition, insufficient_material, game_over) {
+        let status;
+        if (checkmate) {
+            status = turn === 'white' ? "Black wins — Checkmate!" : "White wins — Checkmate!";
+        } else if (stalemate || fifty_moves || repetition || insufficient_material) {
+            status = "Draw";
+        } else {
+            status = turn === 'white' ? "White's turn" : "Black's turn";
+            if (check) status += " - Check!";
+        }
         $("#game-status").text(status);
     }
 

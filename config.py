@@ -9,7 +9,7 @@ class BaseConfig:
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
-    TESTING = True  # Enables testing mode
+    TESTING = False # Enables testing mode
     # Add dev-specific configs here if needed
 
 class ProductionConfig(BaseConfig):

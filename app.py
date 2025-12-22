@@ -7,6 +7,8 @@ app = Flask(__name__)
 # Choose the appropriate configuration
 # For normal development:
 app.config.from_object(DevelopmentConfig)
+app.secret_key = app.config['SECRET_KEY']
+print("SECRET_KEY:", app.config.get("SECRET_KEY"))
 
 # For testing (optional override):
 # app.config.from_object(TestingConfig)
