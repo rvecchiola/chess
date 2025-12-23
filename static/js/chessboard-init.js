@@ -24,6 +24,11 @@ $(document).ready(function () {
 
         onDrop: function (source, target, piece) {
 
+            // Check if piece was dropped on same square it started from
+            if (source === target) {
+                return 'snapback';  // Return piece to original position
+            }
+
             const promotionCheck = detectPromotion(source, target, piece);
 
             if (promotionCheck.promotionNeeded) {
