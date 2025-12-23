@@ -47,6 +47,9 @@ $(document).ready(function () {
 
         board.draggable = false;  // Disable dragging during move
 
+        // Show AI thinking status
+        updateStatus('black', false, false, false, false, false, false, false);
+
         const payload = { from: source, to: target };
         if (promotionPiece) payload.promotion = promotionPiece;
 
@@ -177,7 +180,11 @@ $(document).ready(function () {
         } else if (stalemate || fifty_moves || repetition || insufficient_material) {
             status = "Draw";
         } else {
-            status = turn === 'white' ? "White's turn" : "Black's turn";
+            if (turn === 'white') {
+                status = "White's turn";
+            } else {
+                status = "AI is thinking...";
+            }
             if (check) status += " - Check!";
         }
         $("#game-status").text(status);

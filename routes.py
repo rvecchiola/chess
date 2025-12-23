@@ -2,6 +2,7 @@ from flask import render_template, request, jsonify, session
 import chess
 import random
 
+from ai import choose_ai_move
 from helpers import get_game_state, init_game, save_game_state
 
 # -------------------------------------------------------------------
@@ -74,7 +75,17 @@ def register_routes(app):
             # AI Move
             # -----------------------------------------------------------
             if app.config.get("AI_ENABLED", True) and not board.is_game_over():
-                ai_move = random.choice(list(board.legal_moves))
+                try:
+                    ai_move = choose_ai_move(board, depth=2)
+                    if ai_move is None:
+                        print("AI returned None move")
+                        ai_move = random.choice(list(board.legal_moves))
+                        print(f"Using random move: {ai_move}")
+                except Exception as e:
+                    print(f"AI error: {e}")
+                    ai_move = random.choice(list(board.legal_moves))
+                    print(f"Using random move due to error: {ai_move}")
+                
                 ai_special_move = None
                 if board.is_castling(ai_move):
                     ai_special_move = "Castling"
