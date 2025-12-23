@@ -10,7 +10,6 @@
     <h1>rob's Flask Chess AI</h1>
 
     <div id="board"></div>
-    <button id="reset-btn">New Game</button>
 
     <div id="game-info">
         <div id="game-status">White's turn</div>
@@ -23,6 +22,7 @@
         <div>Move history:</div>
         <ol id="move-history"></ol>
     </div>
+    <button id="reset-btn">New Game</button>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='js/chessboard-1.0.0.min.js') }}"></script>
