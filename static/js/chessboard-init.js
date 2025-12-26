@@ -114,8 +114,7 @@ $(document).ready(function () {
     }
 
     function detectPromotion(source, target, piece) {
-
-        // only trigger for pawn
+        // Only pawns
         if (piece[1] !== 'P') {
             return { promotionNeeded: false };
         }
@@ -123,11 +122,23 @@ $(document).ready(function () {
         const isWhite = piece.startsWith('w');
         const finalRank = isWhite ? "8" : "1";
 
-        if (target.endsWith(finalRank)) {
-            return { promotionNeeded: true };
+        // Must land on final rank
+        if (!target.endsWith(finalRank)) {
+            return { promotionNeeded: false };
         }
 
-        return { promotionNeeded: false };
+        const sourceFile = source[0];
+        const targetFile = target[0];
+
+        // Pawn moving diagonally — likely capture
+        if (sourceFile !== targetFile) {
+            // Let the server decide if capture is valid
+            // BUT don't show promotion modal yet
+            return { promotionNeeded: false };
+        }
+
+        // Straight pawn move to last rank → promotion
+        return { promotionNeeded: true };
     }
 
     function showPromotionDialog(callback) {
