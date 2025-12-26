@@ -13,10 +13,22 @@ def register_routes(app):
 
     @app.route("/")
     def home():
-        session.clear()
-        session.modified = True
-        init_game()
-        return render_template("chess.html")
+        # Only clear/init session if not restoring from test position
+        if not session.get('_test_position_set'):
+            session.clear()
+            session.modified = True
+            init_game()
+        else:
+            # Clear the flag for next request
+            session.pop('_test_position_set', None)
+            session.modified = True
+            # Don't call init_game() - preserve test position
+        
+        # Get current board state to pass to template
+        board, move_history, captured_pieces, special_moves = get_game_state()
+        initial_position = board.fen()
+        
+        return render_template("chess.html", initial_position=initial_position)
 
 
     @app.route("/move", methods=["POST"])
@@ -194,6 +206,7 @@ def register_routes(app):
         session['move_history'] = data.get('move_history', [])
         session['captured_pieces'] = data.get('captured_pieces', {'white': [], 'black': []})
         session['special_moves'] = data.get('special_moves', [])
+        session['_test_position_set'] = True  # Flag to prevent session.clear() in home route
         
         board = chess.Board(fen)
         

@@ -26,6 +26,10 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='js/chessboard-1.0.0.min.js') }}"></script>
+    <script>
+        // Pass initial position from backend to JavaScript
+        window.initialFen = '{{ initial_position }}';
+    </script>
     <script src="{{ url_for('static', filename='js/chessboard-init.js') }}"></script>
 </body>
 </html>

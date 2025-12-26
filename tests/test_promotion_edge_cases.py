@@ -4,7 +4,7 @@ These tests verify that the promotion dialog only appears for valid promotion mo
 """
 import pytest
 from playwright.sync_api import Page, expect
-from tests.helper import setup_board_position
+from tests.helper import setup_board_position, drag_piece, get_piece_in_square
 
 
 @pytest.fixture
@@ -24,14 +24,14 @@ def test_promotion_popup_blocked_by_opponent_piece(page: Page, live_server):
     """
     page.goto(live_server)
     
-    # Setup: White pawn on a7, black rook still on a8 (blocking)
+    # Minimal FEN: white pawn on a7, black rook on a8 (blocking)
     # This is an illegal move - pawn can't move straight when blocked
-    fen = "r1bqkbnr/P1pppppp/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1"
+    fen = "r7/P7/8/8/8/8/8/8 w - - 0 1"
     
     setup_board_position(
         page,
         fen,
-        move_history=["a4", "h6", "a5", "h5", "a6"],
+        move_history=[],
         captured_pieces={"white": [], "black": []},
         special_moves=[]
     )
@@ -39,9 +39,7 @@ def test_promotion_popup_blocked_by_opponent_piece(page: Page, live_server):
     page.wait_for_timeout(500)
     
     # Try to drag pawn straight to a8 (illegal - blocked by rook)
-    page.locator('[data-square="a7"] .piece-417db').drag_to(
-        page.locator('[data-square="a8"]')
-    )
+    drag_piece(page, "a7", "a8")
     
     page.wait_for_timeout(1500)
     
@@ -50,7 +48,7 @@ def test_promotion_popup_blocked_by_opponent_piece(page: Page, live_server):
     expect(promotion_dialog).not_to_be_visible()
     
     # Pawn should snap back to a7
-    a7_pawn = page.locator('[data-square="a7"] .piece-417db[data-piece="wP"]')
+    a7_pawn = get_piece_in_square(page, "a7")
     expect(a7_pawn).to_have_count(1)
     
     # Error message should appear
@@ -65,13 +63,13 @@ def test_promotion_popup_invalid_diagonal_no_capture(page: Page, live_server):
     """
     page.goto(live_server)
     
-    # Setup: White pawn on a7, b8 is EMPTY (no piece to capture)
-    fen = "rn1qkbnr/Ppppppp1/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1"
+    # Minimal FEN: white pawn on a7, b8 is EMPTY (no piece to capture)
+    fen = "8/P7/8/8/8/8/8/8 w - - 0 1"
     
     setup_board_position(
         page,
         fen,
-        move_history=["a4", "h6", "a5", "h5", "a6"],
+        move_history=[],
         captured_pieces={"white": [], "black": []},
         special_moves=[]
     )
@@ -79,9 +77,7 @@ def test_promotion_popup_invalid_diagonal_no_capture(page: Page, live_server):
     page.wait_for_timeout(500)
     
     # Try to move pawn diagonally to b8 (illegal - no piece to capture)
-    page.locator('[data-square="a7"] .piece-417db').drag_to(
-        page.locator('[data-square="b8"]')
-    )
+    drag_piece(page, "a7", "b8")
     
     page.wait_for_timeout(1500)
     
@@ -90,7 +86,7 @@ def test_promotion_popup_invalid_diagonal_no_capture(page: Page, live_server):
     expect(promotion_dialog).not_to_be_visible()
     
     # Pawn should snap back
-    a7_pawn = page.locator('[data-square="a7"] .piece-417db[data-piece="wP"]')
+    a7_pawn = get_piece_in_square(page, "a7")
     expect(a7_pawn).to_have_count(1)
 
 
@@ -100,13 +96,13 @@ def test_promotion_popup_only_appears_for_valid_straight_move(page: Page, live_s
     """
     page.goto(live_server)
     
-    # Setup: White pawn on a7, a8 is EMPTY
-    fen = "1nbqkbnr/Ppppppp1/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1"
+    # Minimal FEN: white pawn on a7, a8 is EMPTY (legal move)
+    fen = "8/P7/8/8/8/8/8/8 w - - 0 1"
     
     setup_board_position(
         page,
         fen,
-        move_history=["a4", "h6", "a5", "h5", "a6"],
+        move_history=[],
         captured_pieces={"white": [], "black": []},
         special_moves=[]
     )
@@ -114,9 +110,7 @@ def test_promotion_popup_only_appears_for_valid_straight_move(page: Page, live_s
     page.wait_for_timeout(500)
     
     # Move pawn straight to a8 (legal move)
-    page.locator('[data-square="a7"] .piece-417db').drag_to(
-        page.locator('[data-square="a8"]')
-    )
+    drag_piece(page, "a7", "a8")
     
     page.wait_for_timeout(1000)
     
@@ -134,13 +128,13 @@ def test_promotion_popup_appears_for_valid_capture(page: Page, live_server):
     """
     page.goto(live_server)
     
-    # Setup: White pawn on a7, black bishop on b8 (can capture)
-    fen = "rb1qkbnr/Ppppppp1/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1"
+    # Minimal FEN: white pawn on a7, black rook on b8 (can capture)
+    fen = "1r6/P7/8/8/8/8/8/8 w - - 0 1"
     
     setup_board_position(
         page,
         fen,
-        move_history=["a4", "h6", "a5", "h5", "a6"],
+        move_history=[],
         captured_pieces={"white": [], "black": []},
         special_moves=[]
     )
@@ -148,9 +142,7 @@ def test_promotion_popup_appears_for_valid_capture(page: Page, live_server):
     page.wait_for_timeout(500)
     
     # Capture bishop and promote
-    page.locator('[data-square="a7"] .piece-417db').drag_to(
-        page.locator('[data-square="b8"]')
-    )
+    drag_piece(page, "a7", "b8")
     
     page.wait_for_timeout(1000)
     
@@ -168,8 +160,8 @@ def test_promotion_popup_not_for_capturing_own_piece(page: Page, live_server):
     """
     page.goto(live_server)
     
-    # Setup: White pawn on a7, WHITE bishop on b8 (can't capture own piece)
-    fen = "rB1qkbnr/Ppppppp1/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1"
+    # Minimal FEN: white pawn on a7, WHITE bishop on b8 (can't capture own piece)
+    fen = "B7/P7/8/8/8/8/8/8 w - - 0 1"
     
     setup_board_position(
         page,
@@ -182,9 +174,7 @@ def test_promotion_popup_not_for_capturing_own_piece(page: Page, live_server):
     page.wait_for_timeout(500)
     
     # Try to "capture" own bishop (illegal)
-    page.locator('[data-square="a7"] .piece-417db').drag_to(
-        page.locator('[data-square="b8"]')
-    )
+    drag_piece(page, "a7", "b8")
     
     page.wait_for_timeout(1500)
     
@@ -204,13 +194,13 @@ def test_black_pawn_promotion_straight_move(page: Page, live_server):
     """
     page.goto(live_server)
     
-    # Setup: Black pawn on b2, b1 is empty, it's black's turn
-    fen = "rnbqkbnr/pppppppp/8/8/8/8/1p6/RNBQKBNR b KQkq - 0 1"
+    # Minimal FEN: Black pawn on b2, b1 is empty, it's black's turn
+    fen = "8/8/8/8/8/8/1p6/8 b - - 0 1"
     
     setup_board_position(
         page,
         fen,
-        move_history=["b3"],  # White moved, now black's turn
+        move_history=[],
         captured_pieces={"white": [], "black": []},
         special_moves=[]
     )
@@ -218,9 +208,7 @@ def test_black_pawn_promotion_straight_move(page: Page, live_server):
     page.wait_for_timeout(500)
     
     # Move black pawn to b1
-    page.locator('[data-square="b2"] .piece-417db[data-piece="bp"]').drag_to(
-        page.locator('[data-square="b1"]')
-    )
+    drag_piece(page, "b2", "b1")
     
     page.wait_for_timeout(1000)
     
@@ -244,13 +232,13 @@ def test_black_pawn_promotion_blocked_no_popup(page: Page, live_server):
     """
     page.goto(live_server)
     
-    # Setup: Black pawn on b2, WHITE KNIGHT on b1 (blocking)
-    fen = "rnbqkbnr/pppppppp/8/8/8/8/1p6/RNBQKBNR b KQkq - 0 1"
+    # Minimal FEN: Black pawn on b2, WHITE KNIGHT on b1 (blocking)
+    fen = "8/8/8/8/8/8/1p6/1N6 b - - 0 1"
     
     setup_board_position(
         page,
         fen,
-        move_history=["b3"],
+        move_history=[],
         captured_pieces={"white": [], "black": []},
         special_moves=[]
     )
@@ -258,9 +246,7 @@ def test_black_pawn_promotion_blocked_no_popup(page: Page, live_server):
     page.wait_for_timeout(500)
     
     # Try to move black pawn straight to b1 (blocked by knight)
-    page.locator('[data-square="b2"] .piece-417db').drag_to(
-        page.locator('[data-square="b1"]')
-    )
+    drag_piece(page, "b2", "b1")
     
     page.wait_for_timeout(1500)
     
@@ -280,8 +266,8 @@ def test_promotion_all_piece_types(page: Page, live_server):
     for piece_type, piece_key in [("Queen", "q"), ("Rook", "r"), ("Bishop", "b"), ("Knight", "n")]:
         page.goto(live_server)
         
-        # Fresh setup for each test
-        fen = "1nbqkbnr/Ppppppp1/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1"
+        # Minimal FEN for each test
+        fen = "8/P7/8/8/8/8/8/8 w - - 0 1"
         
         setup_board_position(
             page,
@@ -294,9 +280,7 @@ def test_promotion_all_piece_types(page: Page, live_server):
         page.wait_for_timeout(500)
         
         # Promote pawn
-        page.locator('[data-square="a7"] .piece-417db').drag_to(
-            page.locator('[data-square="a8"]')
-        )
+        drag_piece(page, "a7", "a8")
         
         page.wait_for_timeout(1000)
         
@@ -317,8 +301,8 @@ def test_promotion_with_capture_updates_captured_pieces(page: Page, live_server)
     """
     page.goto(live_server)
     
-    # Setup: White pawn on a7, black rook on b8
-    fen = "rb1qkbnr/Ppppppp1/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1"
+    # Minimal FEN: white pawn on a7, black rook on b8
+    fen = "1r6/P7/8/8/8/8/8/8 w - - 0 1"
     
     setup_board_position(
         page,
@@ -331,9 +315,7 @@ def test_promotion_with_capture_updates_captured_pieces(page: Page, live_server)
     page.wait_for_timeout(500)
     
     # Capture rook and promote
-    page.locator('[data-square="a7"] .piece-417db').drag_to(
-        page.locator('[data-square="b8"]')
-    )
+    drag_piece(page, "a7", "b8")
     
     page.wait_for_timeout(1000)
     

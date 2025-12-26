@@ -6,9 +6,12 @@ $(document).ready(function () {
     let currentTurn = 'white';  // Track whose turn it is
     let isGameOver = false;     // Track if game is over
 
+    // Use initial position from backend, fallback to 'start'
+    let initialPosition = window.initialFen || 'start';
+
     board = Chessboard('board', {
         draggable: true,
-        position: 'start',
+        position: initialPosition,
         pieceTheme: '/static/images/chesspieces/wikipedia/{piece}.png',
 
         onDragStart: function (source, piece) {
