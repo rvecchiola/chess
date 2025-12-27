@@ -88,7 +88,9 @@ $(document).ready(function () {
                 } else {
 
                     rollbackPosition();   // unified rollback
-                    updateErrorMessage("Illegal move!");
+                    // 🔧 FIX: Use server's detailed error message if available
+                    const errorMsg = response.message || "Illegal move!";
+                    updateErrorMessage(errorMsg);
                     // Restore correct turn status after illegal move
                     updateStatus(currentTurn, false, false, false, false, false, false, false);
                 }
@@ -97,7 +99,10 @@ $(document).ready(function () {
             error: function(xhr) {
                 board.draggable = true;  // Re-enable dragging
                 rollbackPosition();
-                const errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "Server error";
+                // 🔧 FIX: Extract error message from server response
+                const errorMsg = xhr.responseJSON && xhr.responseJSON.message 
+                    ? xhr.responseJSON.message 
+                    : "Server error";
                 updateErrorMessage(errorMsg);
                 // Restore correct turn status after server error
                 updateStatus(currentTurn, false, false, false, false, false, false, false);

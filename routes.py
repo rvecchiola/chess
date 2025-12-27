@@ -35,7 +35,7 @@ def register_routes(app):
     def move():
         board, move_history, captured_pieces, special_moves = get_game_state()
 
-        print("\n--- DEBUG ---")
+        print("\n--- DEBUG: MOVE REQUEST ---")
         print("Current board FEN:", board.fen())
         print("Current turn:", "white" if board.turn == chess.WHITE else "black")
 
@@ -45,29 +45,45 @@ def register_routes(app):
         promotion = data.get("promotion")
 
         uci = f"{from_sq}{to_sq}{promotion}" if promotion else f"{from_sq}{to_sq}"
-        print("Move received:", uci)
+        print("Move received (UCI):", uci)
 
         try:
             move = chess.Move.from_uci(uci)
+            print("Parsed move object:", move)
 
             if move not in board.legal_moves:
                 reason = explain_illegal_move(board, move)
+                
+                # 🔧 ENHANCED LOGGING FOR ILLEGAL MOVES
+                print("❌ ILLEGAL MOVE DETECTED")
+                print(f"   From: {from_sq} → To: {to_sq}")
+                print(f"   UCI: {uci}")
+                print(f"   Reason: {reason}")
+                print(f"   Legal moves: {[m.uci() for m in list(board.legal_moves)[:10]]}...")  # Show first 10
+                print("--- END DEBUG ---\n")
 
                 return jsonify({
                     "status": "illegal",
                     "message": reason
                 })
             
+            print("✅ Move is LEGAL, executing...")
+            
             # Detect special move
             special_move = None
             if board.is_castling(move):
                 special_move = "Castling"
+                print("   Special: Castling")
             elif board.is_en_passant(move):
                 special_move = "En Passant"
+                print("   Special: En Passant")
             elif promotion:
                 special_move = f"Promotion to {promotion.upper()}"
+                print(f"   Special: Promotion to {promotion.upper()}")
+            
             # SAN before push
             move_san = board.san(move)
+            print(f"   SAN notation: {move_san}")
 
             # Track player capture
             if board.is_capture(move):
@@ -80,7 +96,7 @@ def register_routes(app):
                     # Store by capturing player: white piece captured → black captured it
                     color_key = "black" if captured_piece.color == chess.WHITE else "white"
                     captured_pieces[color_key].append(captured_piece.symbol())
-                    print("Player captured:", captured_piece.symbol())
+                    print(f"   Player captured: {captured_piece.symbol()}")
 
             board.push(move)
             move_history.append(move_san)
@@ -88,28 +104,34 @@ def register_routes(app):
             if special_move:
                 special_moves.append(special_move)
 
+            print(f"Board after player move: {board.fen()}")
+
             # -----------------------------------------------------------
             # AI Move
             # -----------------------------------------------------------
             if app.config.get("AI_ENABLED", True) and not board.is_game_over():
+                print("\n🤖 AI MOVE:")
                 try:
                     ai_move = choose_ai_move(board, depth=2)
                     if ai_move is None:
-                        print("AI returned None move")
+                        print("   WARNING: AI returned None, using random move")
                         ai_move = random.choice(list(board.legal_moves))
-                        print(f"Using random move: {ai_move}")
+                        print(f"   Random move: {ai_move.uci()}")
                 except Exception as e:
-                    print(f"AI error: {e}")
+                    print(f"   ERROR in AI: {e}")
                     ai_move = random.choice(list(board.legal_moves))
-                    print(f"Using random move due to error: {ai_move}")
+                    print(f"   Fallback random move: {ai_move.uci()}")
                 
                 ai_special_move = None
                 if board.is_castling(ai_move):
                     ai_special_move = "Castling"
+                    print("   AI Special: Castling")
                 elif board.is_en_passant(ai_move):
                     ai_special_move = "En Passant"
-                # Note: AI doesn't handle promotion in this simple implementation
+                    print("   AI Special: En Passant")
+                
                 ai_san = board.san(ai_move)
+                print(f"   AI SAN: {ai_san}")
 
                 if board.is_capture(ai_move):
                     if board.is_en_passant(ai_move):
@@ -121,7 +143,7 @@ def register_routes(app):
                         # Store by capturing player: white piece captured → black captured it
                         color_key = "black" if captured_piece.color == chess.WHITE else "white"
                         captured_pieces[color_key].append(captured_piece.symbol())
-                        print("AI captured:", captured_piece.symbol())
+                        print(f"   AI captured: {captured_piece.symbol()}")
 
                 board.push(ai_move)
                 move_history.append(ai_san)
@@ -131,7 +153,9 @@ def register_routes(app):
             # Save updated session state
             save_game_state(board, move_history, captured_pieces, special_moves)
 
-            print("Board after moves:", board.fen())
+            print(f"\n📊 Final board state: {board.fen()}")
+            print(f"📊 Move history: {move_history}")
+            print(f"📊 Game over: {board.is_game_over()}")
             print("--- END DEBUG ---\n")
 
             return jsonify({
@@ -151,14 +175,19 @@ def register_routes(app):
             })
 
         except Exception as e:
-            print("ERROR:", e)
+            print("\n❌ EXCEPTION IN /move ENDPOINT")
+            print(f"   Error: {e}")
+            print(f"   Move data: from={from_sq}, to={to_sq}, promotion={promotion}")
+            print("--- END DEBUG ---\n")
             return jsonify({"status": "illegal", "message": str(e)})
 
 
     @app.route("/reset", methods=["POST"])
     def reset():
+        print("\n♻️  RESET GAME")
         session.clear()
         init_game()
+        print("--- END DEBUG ---\n")
 
         return jsonify({
             "status": "ok",
