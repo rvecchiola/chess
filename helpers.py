@@ -33,3 +33,21 @@ def save_game_state(board, move_history, captured_pieces, special_moves):
     session['move_history'] = move_history
     session['captured_pieces'] = captured_pieces
     session['special_moves'] = special_moves
+
+## illegal moves helper
+
+def explain_illegal_move(board, move):
+    # Move not even pseudo-legal (wrong movement)
+    if not board.is_pseudo_legal(move):
+        return "That piece cannot move like that."
+
+    # Move would leave king in check (pins, discovered checks)
+    if board.is_into_check(move):
+        return "Illegal move — your king would be in check."
+
+    # Castling specific checks
+    if board.piece_at(move.from_square).piece_type == chess.KING:
+        if board.is_check():
+            return "You cannot castle while in check."
+
+    return "Illegal move."    

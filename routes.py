@@ -3,7 +3,7 @@ import chess
 import random
 
 from ai import choose_ai_move
-from helpers import get_game_state, init_game, save_game_state
+from helpers import explain_illegal_move, get_game_state, init_game, save_game_state
 
 # -------------------------------------------------------------------
 # Routes
@@ -51,8 +51,13 @@ def register_routes(app):
             move = chess.Move.from_uci(uci)
 
             if move not in board.legal_moves:
-                print("Move is illegal")
-                return jsonify({"status": "illegal", "fen": board.fen()})
+                reason = explain_illegal_move(board, move)
+
+                return jsonify({
+                    "status": "illegal",
+                    "message": reason
+                })
+            
             # Detect special move
             special_move = None
             if board.is_castling(move):
