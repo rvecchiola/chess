@@ -20,10 +20,10 @@ def client():
 
 def test_promotion_capture_rook(client):
     """Test promotion by capturing rook on 8th rank"""
-    # White pawn on a7, can capture rook on a8
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    # White pawn on b7, can capture rook on a8 (diagonal)
+    set_position(client, 'rnbqkbnr/1P5p/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     
-    rv = make_move(client, "a7", "a8", promotion="q")
+    rv = make_move(client, "b7", "a8", promotion="q")
     assert rv["status"] == "ok"
     board = chess.Board(rv["fen"])
     assert board.piece_at(chess.A8).symbol().upper() == "Q"
@@ -44,10 +44,10 @@ def test_promotion_diagonal_capture(client):
 
 def test_black_promotion(client):
     """Test black pawn promotion"""
-    # Black pawn on h2, can capture rook on h1
-    set_position(client, 'rnbqkbnr/ppppppp1/8/8/8/8/PPPPPPP1p/RNBQKBNR b KQkq - 0 1')
+    # Black pawn on g2, can capture rook on h1 (diagonal)
+    set_position(client, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPpP/RNBQKBNR b KQkq - 0 1')
     
-    rv = make_move(client, "h2", "h1", promotion="q")
+    rv = make_move(client, "g2", "h1", promotion="q")
     assert rv["status"] == "ok"
     board = chess.Board(rv["fen"])
     piece = board.piece_at(chess.H1)
@@ -57,22 +57,22 @@ def test_black_promotion(client):
 
 def test_promotion_both_sides_same_game(client):
     """Test both white and black promoting in same game"""
-    # Setup: white pawn on a7, black pawn on h2
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/PPPPPPP1p/RNBQKBNR w KQkq - 0 1')
+    # Setup: white pawn on a7 (straight to empty a8), black pawn on g2 (diagonal to h1)
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/PPPPPPpP/RNBQKBNR w KQkq - 0 1')
     
-    # White promotes
+    # White promotes (straight)
     rv = make_move(client, "a7", "a8", promotion="q")
     assert rv["status"] == "ok"
     
-    # Black promotes
-    rv = make_move(client, "h2", "h1", promotion="q")
+    # Black promotes (diagonal capture)
+    rv = make_move(client, "g2", "h1", promotion="q")
     assert rv["status"] == "ok"
-    assert rv["special_moves"].count("Promotion") == 2
+    assert rv["special_moves"].count("Promotion to Q") == 2
 
 
 def test_promotion_multiple_queens(client):
     """Test promoting to create multiple queens"""
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
     
     rv = make_move(client, "a7", "a8", promotion="q")
     assert rv["status"] == "ok"
@@ -87,7 +87,7 @@ def test_promotion_multiple_queens(client):
 
 def test_promotion_under_check(client):
     """Test that promotion is legal"""
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
     
     rv = make_move(client, "a7", "a8", promotion="q")
     assert rv["status"] == "ok"
@@ -118,7 +118,7 @@ def test_promotion_flag_on_non_promotion_move(client):
 
 def test_promotion_missing_parameter(client):
     """Test that move to 8th rank without promotion parameter fails"""
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
     
     rv = make_move(client, "a7", "a8")  # No promotion
     assert rv["status"] == "illegal"
@@ -130,7 +130,7 @@ def test_promotion_all_four_pieces(client):
     expected = ['Q', 'R', 'B', 'N']
     
     for piece, symbol in zip(pieces, expected):
-        set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+        set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
         
         rv = make_move(client, "a7", "a8", promotion=piece)
         assert rv["status"] == "ok", f"Promotion to {piece} failed"
@@ -142,7 +142,7 @@ def test_promotion_all_four_pieces(client):
 
 def test_promotion_san_notation(client):
     """Test SAN notation includes = symbol"""
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
     
     rv = make_move(client, "a7", "a8", promotion="q")
     assert rv["status"] == "ok"
@@ -154,9 +154,9 @@ def test_promotion_san_notation(client):
 
 def test_black_underpromotion_to_rook(client):
     """Test black underpromotion"""
-    set_position(client, 'rnbqkbnr/ppppppp1/8/8/8/8/PPPPPPP1p/RNBQKBNR b KQkq - 0 1')
+    set_position(client, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPpP/RNBQKBNR b KQkq - 0 1')
     
-    rv = make_move(client, "h2", "h1", promotion="r")
+    rv = make_move(client, "g2", "h1", promotion="r")
     assert rv["status"] == "ok"
     board = chess.Board(rv["fen"])
     piece = board.piece_at(chess.H1)
@@ -166,9 +166,9 @@ def test_black_underpromotion_to_rook(client):
 
 def test_promotion_tracks_captured_piece(client):
     """Test capture tracking during promotion"""
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    set_position(client, 'rnbqkbnr/1P5p/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     
-    rv = make_move(client, "a7", "a8", promotion="q")
+    rv = make_move(client, "b7", "a8", promotion="q")
     assert rv["status"] == "ok"
     assert len(rv["captured_pieces"]["white"]) > 0
     assert 'r' in rv["captured_pieces"]["white"]
@@ -187,7 +187,7 @@ def test_promotion_straight_advance(client):
 
 def test_promotion_invalid_piece_king(client):
     """Test promoting to king is illegal"""
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
     
     rv = make_move(client, "a7", "a8", promotion="k")
     assert rv["status"] == "illegal"
@@ -195,7 +195,7 @@ def test_promotion_invalid_piece_king(client):
 
 def test_promotion_to_queen_standard(client):
     """Test standard queen promotion"""
-    set_position(client, 'rnbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
     
     rv = make_move(client, "a7", "a8", promotion="q")
     assert rv["status"] == "ok"
