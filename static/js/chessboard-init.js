@@ -240,7 +240,28 @@ $(document).ready(function () {
 
     function updateMoveHistory(history) {
         if (!Array.isArray(history)) return;
-        $("#move-history").html(history.map(m => `<li>${m}</li>`).join(""));
+
+        const tbody = $("#move-history tbody");
+        tbody.empty();
+
+        for (let i = 0; i < history.length; i += 2) {
+            const moveNumber = Math.floor(i / 2) + 1;
+            const whiteMove = history[i] || "";
+            const blackMove = history[i + 1] || "";
+
+            const row = `
+                <tr>
+                    <td>${moveNumber}</td>
+                    <td>${whiteMove}</td>
+                    <td>${blackMove}</td>
+                </tr>
+            `;
+
+            tbody.append(row);
+        }
+
+        // Auto-scroll to latest move
+        tbody.scrollTop(tbody.prop("scrollHeight"));
     }
 
     const MATERIAL_VALUES = {

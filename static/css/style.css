@@ -87,6 +87,54 @@ body {
     line-height: 1.4;
 }
 
+/* Move history table */
+.move-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.move-table thead {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.move-table th {
+    text-align: left;
+    font-weight: 600;
+    padding: 4px 6px;
+    color: #555;
+}
+
+.move-table td {
+    padding: 4px 6px;
+    vertical-align: top;
+}
+
+.move-table tbody {
+    display: block;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.move-table thead,
+.move-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* Move number column */
+.move-table td:first-child,
+.move-table th:first-child {
+    width: 2em;
+    color: #666;
+}
+
+/* Highlight last move (optional but nice) */
+.move-table tr:last-child td {
+    background: #f1f5f9;
+}
+
 /* Button */
 #reset-btn {
     margin-top: auto;
