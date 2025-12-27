@@ -204,3 +204,29 @@ def test_promotion_to_queen_standard(client):
     piece = board.piece_at(chess.A8)
     assert piece.piece_type == chess.QUEEN
     assert piece.color == chess.WHITE
+
+def test_promotion_blocked_by_own_piece(client):
+    """Test promotion fails if target square has own piece"""
+    set_position(client, '1nbqkNnr/P6p/8/8/8/8/1PPPPPPP/RNBQKB1R w KQkq - 0 1')
+    # a8 has white knight - can't promote there
+    rv = make_move(client, "a7", "a8", promotion="q")
+    assert rv["status"] == "illegal"
+
+def test_promotion_to_lowercase_piece(client):
+    """Test that lowercase promotion piece codes work"""
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    rv = make_move(client, "a7", "a8", promotion="q")  # lowercase 'q'
+    assert rv["status"] == "ok"
+
+def test_promotion_uppercase_piece(client):
+    """Test that uppercase promotion piece codes work"""
+    set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
+    rv = make_move(client, "a7", "a8", promotion="Q")  # uppercase 'Q'
+    assert rv["status"] == "ok"
+
+def test_black_promotion_diagonal_empty_square(client):
+    """Test black can't promote diagonally to empty square"""
+    set_position(client, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPpP/RNBQKBN1 b KQkq - 0 1')
+    # g2 pawn, h1 is empty - can't move diagonally
+    rv = make_move(client, "g2", "h1", promotion="q")
+    assert rv["status"] == "illegal"

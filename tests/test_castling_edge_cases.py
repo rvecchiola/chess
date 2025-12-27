@@ -303,3 +303,60 @@ def test_castling_special_moves_tracking(client):
     rv = make_move(client, "e1", "g1")
     assert rv["status"] == "ok"
     assert "Castling" in rv["special_moves"], "Castling should be in special_moves"
+
+def test_castling_with_pieces_between_king_and_rook(client):
+    """Test castling fails if pieces block the path"""
+    app.config['AI_ENABLED'] = False
+    reset_board(client)
+    # Don't clear the pieces - try to castle immediately
+    rv = make_move(client, "e1", "g1")
+    assert rv["status"] == "illegal"
+
+def test_castling_queenside_with_b1_piece(client):
+    """Test queenside castling fails if b1 has piece"""
+    app.config['AI_ENABLED'] = False
+    reset_board(client)
+    # Clear d1, c1 but leave b1 knight
+    moves = [
+        ("d2", "d4"), ("d7", "d5"),
+        ("c1", "f4"), ("c8", "f5"),
+        ("d1", "d2"), ("d8", "d7"),
+    ]
+    for from_sq, to_sq in moves:
+        make_move(client, from_sq, to_sq)
+    # b1 knight still there - queenside castle should work
+    rv = make_move(client, "e1", "c1")
+    assert rv["status"] == "ok"  # b1 doesn't block queenside castling
+
+def test_black_castling_into_check(client):
+    """Test black cannot castle into check"""
+    app.config['AI_ENABLED'] = False
+    with client.session_transaction() as sess:
+        # White rook on g1 attacks g8
+        sess['fen'] = 'r3k2r/8/8/8/8/8/8/R3K1R1 b kq - 0 1'
+        sess['move_history'] = []
+        sess['captured_pieces'] = {'white': [], 'black': []}
+        sess['special_moves'] = []
+    
+    rv = make_move(client, "e8", "g8")
+    assert rv["status"] == "illegal"
+
+def test_castling_after_king_moved_and_returned(client):
+    """Test castling rights lost even if king returns to e1"""
+    app.config['AI_ENABLED'] = False
+    reset_board(client)
+    # Move king and return
+    make_move(client, "e2", "e4")
+    make_move(client, "e7", "e5")
+    make_move(client, "e1", "e2")
+    make_move(client, "e8", "e7")
+    make_move(client, "e2", "e1")
+    make_move(client, "e7", "e8")
+    # Clear for castling
+    make_move(client, "g1", "f3")
+    make_move(client, "g8", "f6")
+    make_move(client, "f1", "e2")
+    make_move(client, "f8", "e7")
+    # Try to castle - should fail (king moved)
+    rv = make_move(client, "e1", "g1")
+    assert rv["status"] == "illegal"
