@@ -21,13 +21,25 @@ def test_ai_move_is_legal(client):
 def test_check_detection(client):
     app.config['AI_ENABLED'] = False
     reset_board(client)
-    # Fool's mate setup via moves
-    moves = [("f2","f3"), ("e7","e5"), ("g2","g4"), ("d8","h4")]
+    
+    # Create a position with check (NOT checkmate)
+    # Use a simple discovered check: move bishop to reveal rook check
+    moves = [
+        ("e2", "e4"), ("e7", "e5"),
+        ("f1", "c4"), ("g8", "f6"),  # White bishop to c4
+        ("g1", "f3"), ("f8", "c5"),  # Develop pieces
+        ("c4", "f7")  # Bishop takes f7 with check (King can escape)
+    ]
+    
     for from_sq, to_sq in moves:
-        make_move(client, from_sq, to_sq)
-    rv = make_move(client, "g1", "f3")  # dummy move to refresh board
+        rv = make_move(client, from_sq, to_sq)
+    
+    # Now verify the last move put king in check
     board = chess.Board(rv["fen"])
-    assert board.is_check() == True
+    assert board.is_check() == True, "King should be in check"
+    assert rv["check"] == True, "Response should indicate check"
+    assert rv["checkmate"] == False, "Should be check, not checkmate"
+    assert rv["game_over"] == False, "Game should not be over"
 
 def test_checkmate_detection(client):
     app.config['AI_ENABLED'] = False

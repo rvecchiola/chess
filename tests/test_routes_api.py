@@ -21,8 +21,8 @@ def make_move(client, from_sq, to_sq, promotion=None):
     return rv.get_json()
 
 def test_home(client, monkeypatch):
-    # Monkeypatch render_template to avoid TemplateNotFound
-    monkeypatch.setattr("routes.render_template", lambda x: "OK")
+    # Accept template name and any keyword args
+    monkeypatch.setattr("routes.render_template", lambda x, **kwargs: "OK")
     rv = client.get("/")
     assert rv.status_code == 200
 
