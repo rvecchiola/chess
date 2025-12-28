@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify, session
 import chess
 import random
 
-from ai import choose_ai_move
+from ai import choose_ai_move, material_score
 from helpers import explain_illegal_move, get_game_state, init_game, save_game_state
 
 # -------------------------------------------------------------------
@@ -148,6 +148,20 @@ def register_routes(app):
                         color_key = "black" if captured_piece.color == chess.WHITE else "white"
                         captured_pieces[color_key].append(captured_piece.symbol())
                         print(f"   AI captured: {captured_piece.symbol()}")
+                
+                # --- FORCE AI PROMOTION SAFETY NET ---
+                if (
+                    board.piece_at(ai_move.from_square)
+                    and board.piece_at(ai_move.from_square).piece_type == chess.PAWN
+                    and chess.square_rank(ai_move.to_square) in (0, 7)
+                    and ai_move.promotion is None
+                ):
+                    ai_move = chess.Move(
+                        ai_move.from_square,
+                        ai_move.to_square,
+                        promotion=chess.QUEEN
+                    )
+                    ai_special_move = "Promotion to Q"
 
                 board.push(ai_move)
                 move_history.append(ai_san)
@@ -157,9 +171,12 @@ def register_routes(app):
             # Save updated session state
             save_game_state(board, move_history, captured_pieces, special_moves)
 
+            material = material_score(board)
+
             print(f"\n📊 Final board state: {board.fen()}")
             print(f"📊 Move history: {move_history}")
             print(f"📊 Game over: {board.is_game_over()}")
+            print(f"materidal score: {material}")
             print("--- END DEBUG ---\n")
 
             return jsonify({
@@ -175,7 +192,8 @@ def register_routes(app):
                 "insufficient_material": board.is_insufficient_material(),
                 "game_over": board.is_game_over(),
                 "move_history": move_history,
-                "captured_pieces": captured_pieces
+                "captured_pieces": captured_pieces,
+                "material": material
             })
 
         except Exception as e:
@@ -206,7 +224,8 @@ def register_routes(app):
             "insufficient_material": False,
             "game_over": False,
             "move_history": [],
-            "captured_pieces": {'white': [], 'black': []}
+            "captured_pieces": {'white': [], 'black': []},
+            "material": 0
         })
     
     @app.route("/test/set_position", methods=["POST"])
@@ -255,5 +274,6 @@ def register_routes(app):
             "check": board.is_check(),
             "checkmate": board.is_checkmate(),
             "stalemate": board.is_stalemate(),
-            "game_over": board.is_game_over()
+            "game_over": board.is_game_over(),
+            "material":0
         })

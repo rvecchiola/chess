@@ -83,6 +83,7 @@ $(document).ready(function () {
                     updateSpecialMove(response.special_moves);
                     updateMoveHistory(response.move_history);
                     updateCaptured(response.captured_pieces);
+                    updateMaterialAdvantage(response.material);
                     updateErrorMessage("");  // Clear any previous error
 
                 } else {
@@ -210,6 +211,7 @@ $(document).ready(function () {
                 updateMoveHistory([]);
                 updateCaptured({ white: [], black: [] });
                 updateErrorMessage("");  // Clear error on reset
+                updateMaterialAdvantage(0);
             }
         });
     });
@@ -300,38 +302,11 @@ $(document).ready(function () {
         tbody.scrollTop(tbody.prop("scrollHeight"));
     }
 
-    const MATERIAL_VALUES = {
-            
-        p: 1,
-        n: 3,
-        b: 3,
-        r: 5,
-        q: 9
-    };
-
-    function calculateMaterial(captured) {
-        let whiteScore = 0;
-        let blackScore = 0;
-
-        // White captured black pieces
-        captured.white.forEach(p => {
-            whiteScore += MATERIAL_VALUES[p.toLowerCase()] || 0;
-        });
-
-        // Black captured white pieces
-        captured.black.forEach(p => {
-            blackScore += MATERIAL_VALUES[p.toLowerCase()] || 0;
-        });
-
-        return whiteScore - blackScore; // positive = white ahead
-    }
-
     function updateCaptured(captured) {
         if (!captured || !captured.white || !captured.black) return;
 
         renderCapturedRow("#white-captured", captured.white);
         renderCapturedRow("#black-captured", captured.black);
-        updateMaterialAdvantage(captured);
     }
 
     function renderCapturedRow(selector, pieces) {
@@ -360,29 +335,28 @@ $(document).ready(function () {
         });
     }
 
-    function updateMaterialAdvantage(captured) {
-            
-        const diff = calculateMaterial(captured);
+    function updateMaterialAdvantage(material) {
         const el = $("#material-advantage");
 
-        if (diff === 0) {
+        if (material === 0) {
             el
-                .text("Even")
-                .removeClass("material-white material-black")
-                .css("color", "#666");
+            .text("Material: Even")
+            .removeClass("material-white material-black");
             return;
         }
 
-        if (diff > 0) {
+        const pawns = Math.abs(material / 100).toFixed(1);
+
+        if (material > 0) {
             el
-                .text(`White +${diff}`)
-                .removeClass("material-black")
-                .addClass("material-white");
+            .text(`White +${pawns}`)
+            .removeClass("material-black")
+            .addClass("material-white");
         } else {
             el
-                .text(`Black +${Math.abs(diff)}`)
-                .removeClass("material-white")
-                .addClass("material-black");
+            .text(`Black +${pawns}`)
+            .removeClass("material-white")
+            .addClass("material-black");
         }
     }
 });

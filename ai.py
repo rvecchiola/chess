@@ -134,3 +134,15 @@ def choose_ai_move(board, depth=2):
                 best_move = move
     
     return best_move
+
+#material thing
+def material_score(board):
+    """
+    Returns material balance in centipawns.
+    Positive = white ahead, negative = black ahead
+    """
+    score = 0
+    for piece_type, value in PIECE_VALUES.items():
+        score += len(board.pieces(piece_type, chess.WHITE)) * value
+        score -= len(board.pieces(piece_type, chess.BLACK)) * value
+    return score
