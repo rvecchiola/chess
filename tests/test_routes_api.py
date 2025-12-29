@@ -1179,7 +1179,8 @@ def test_material_unchanged_on_illegal_move(client):
     rv = make_move(client, "e2", "e5")  # illegal
     
     assert rv["status"] == "illegal"
-    assert "material" not in rv or rv["material"] == 0
+    assert "material" in rv 
+    assert rv["material"] == 0
 
 
 @pytest.mark.integration
@@ -1189,6 +1190,7 @@ def test_material_after_promotion(client):
     rv = make_move(client, "a7", "a8", promotion="q")
     
     assert rv["status"] == "ok"
+    #should be 900 because we just check piece value for now
     assert rv["material"] == PIECE_VALUES[chess.QUEEN]
 
 @pytest.mark.integration
