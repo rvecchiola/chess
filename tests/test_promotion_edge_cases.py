@@ -234,3 +234,38 @@ def test_black_promotion_diagonal_empty_square(client):
     # g2 pawn, h1 is empty - can't move diagonally
     rv = make_move(client, "g2", "h1", promotion="q")
     assert rv["status"] == "illegal"
+
+def test_promotion_while_escaping_check(client):
+    """Test that promotion can be used to escape check"""
+    # White king on g1 in check from black rook on g8
+    # White pawn on f7 can capture rook and promote to escape check
+    set_position(client, '6r1/5P2/8/8/8/8/8/6K1 w - - 0 1')
+    
+    rv = make_move(client, "f7", "g8", promotion="q")
+    assert rv["status"] == "ok"
+    board = chess.Board(rv["fen"])
+    assert not board.is_check()  # White is no longer in check after capturing the rook
+
+def test_promotion_gives_check(client):
+    """Test that promoting gives check to opponent king"""
+    # White pawn on f7, black knight on e8 (can capture diagonally and promote)
+    # After capture-promotion, queen on e8 gives check to king on d8
+    set_position(client, '3kn3/5P2/8/8/8/8/8/4K3 w - - 0 1')
+    
+    rv = make_move(client, "f7", "e8", promotion="q")
+    assert rv["status"] == "ok"
+    board = chess.Board(rv["fen"])
+    assert board.is_check() == True  # Black king in check from new queen on e8
+    assert "+" in rv["move_history"][-1]  # SAN notation includes check
+
+def test_promotion_to_checkmate(client):
+    """Test promoting to deliver checkmate"""
+    # White pawn on f7, black king on h8 trapped in corner
+    # After f7-f8=Q+, it's checkmate (king can't escape)
+    set_position(client, '7k/5P2/6K1/8/8/8/8/8 w - - 0 1')
+    
+    rv = make_move(client, "f7", "f8", promotion="q")
+    assert rv["status"] == "ok"
+    assert rv["checkmate"] == True
+    assert rv["game_over"] == True
+    assert "#" in rv["move_history"][-1]  # SAN notation includes checkmate symbol

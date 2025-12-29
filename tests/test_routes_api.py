@@ -1180,3 +1180,56 @@ def test_castling_does_not_change_material(client):
     rv = make_move(client, "e1", "g1")  # castle
     
     assert rv["material"] == 0
+
+def test_en_passant_only_diagonal(client):
+    """Test that en passant only works diagonally, not horizontally"""
+    app.config['AI_ENABLED'] = False
+    reset_board(client)
+    
+    # Set up en passant opportunity
+    make_move(client, "e2", "e4")
+    make_move(client, "a7", "a6")  # Random move
+    make_move(client, "e4", "e5")
+    make_move(client, "d7", "d5")  # Creates en passant on d6
+    
+    # Try to capture horizontally (illegal)
+    # Pawn on e5 cannot move to d5 (that's horizontal capture, not diagonal)
+    rv = make_move(client, "e5", "d5")
+    # Actually this would be a diagonal capture of the pawn itself
+    # Let me think... en passant is always diagonal (e5xd6), never horizontal
+    # This test is already covered by the basic en passant test
+    # Instead, test that en passant target square is diagonal
+    assert rv["status"] == "illegal"  # Can't capture pawn on d5, must use d6
+    
+    # Correct en passant is diagonal to d6
+    rv = make_move(client, "e5", "d6")
+    assert rv["status"] == "ok"
+
+def test_queenside_castling_b1_blocked_vs_attacked(client):
+    """Clarify b1 under attack (legal) vs b1 blocked by piece (illegal)"""
+    app.config['AI_ENABLED'] = False
+    
+    # Test 1: b1 is ATTACKED but empty - castling is LEGAL
+    with client.session_transaction() as sess:
+        sess['fen'] = '1r2k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1'
+        sess['move_history'] = []
+        sess['captured_pieces'] = {'white': [], 'black': []}
+        sess['special_moves'] = []
+    
+    board = chess.Board('1r2k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1')
+    assert board.is_attacked_by(chess.BLACK, chess.B1)  # b1 is attacked
+    
+    rv = make_move(client, "e1", "c1")
+    assert rv["status"] == "ok", "Castling legal when b1 attacked but empty"
+    
+    # Test 2: b1 is BLOCKED by piece - castling is ILLEGAL
+    reset_board(client)
+    make_move(client, "d2", "d4")
+    make_move(client, "d7", "d5")
+    make_move(client, "c1", "f4")
+    make_move(client, "c8", "f5")
+    make_move(client, "d1", "d2")
+    make_move(client, "d8", "d7")
+    # b1 still has knight - try to castle
+    rv = make_move(client, "e1", "c1")
+    assert rv["status"] == "illegal", "Castling illegal when b1 blocked by knight"

@@ -108,3 +108,22 @@ def test_discovery_check(new_board):
     move = chess.Move.from_uci("a4b5")  # Bishop moves, revealing check
     new_board.push(move)
     assert new_board.is_check() == True
+
+def test_double_check(new_board):
+    """Test double check - king can only move, cannot block or capture"""
+    # Simpler position: Queen on d4 and rook on e1 both giving check to king on e4
+    new_board.set_fen("8/8/8/8/3Qk3/8/8/4R2K w - - 0 1")
+    
+    # Move to black's turn so king is in double check
+    new_board.turn = chess.BLACK
+    
+    # Verify it's check (queen and rook both attacking e4)
+    assert new_board.is_check() == True
+    
+    # In double check, ONLY king moves are legal
+    legal_moves = list(new_board.legal_moves)
+    assert len(legal_moves) > 0, "King must have at least one legal move"
+    
+    for move in legal_moves:
+        # All legal moves must be king moves
+        assert new_board.piece_at(move.from_square).piece_type == chess.KING
