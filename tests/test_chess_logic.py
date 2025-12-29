@@ -88,13 +88,14 @@ def test_king_moves(new_board):
 def test_pinned_piece_cannot_move(new_board):
     # Bishop on d4 is pinned by rook on d8, king on d1
     new_board.set_fen("3r4/8/8/8/3B4/8/8/3K4 w - - 0 1")
-    # The bishop is absolutely pinned - any move exposes the king
-    # Only the king can move in this position
-    illegal_moves = ["d4c3", "d4e3", "d4c5", "d4e5", "d4d2", "d4d3", "d4d5", "d4d6", "d4d7", "d4d8"]
+    # The bishop is absolutely pinned and cannot move at all
+    # Bishops can only move diagonally, and any diagonal move exposes king to check
+    # The bishop also cannot move along the d-file (bishops don't move like that)
+    illegal_moves = ["d4c3", "d4e3", "d4c5", "d4e5", "d4b2", "d4f2", "d4b6", "d4f6", "d4a1", "d4g1", "d4a7", "d4g7"]
     for uci in illegal_moves:
         move = chess.Move.from_uci(uci)
         assert move not in new_board.legal_moves
-    # Only king moves are legal
+    # Only king can move
     king_moves = ["d1e2", "d1d2", "d1c2", "d1e1", "d1c1"]
     for uci in king_moves:
         move = chess.Move.from_uci(uci)
@@ -107,3 +108,22 @@ def test_discovery_check(new_board):
     move = chess.Move.from_uci("a4b5")  # Bishop moves, revealing check
     new_board.push(move)
     assert new_board.is_check() == True
+
+def test_double_check(new_board):
+    """Test double check - king can only move, cannot block or capture"""
+    # Simpler position: Queen on d4 and rook on e1 both giving check to king on e4
+    new_board.set_fen("8/8/8/8/3Qk3/8/8/4R2K w - - 0 1")
+    
+    # Move to black's turn so king is in double check
+    new_board.turn = chess.BLACK
+    
+    # Verify it's check (queen and rook both attacking e4)
+    assert new_board.is_check() == True
+    
+    # In double check, ONLY king moves are legal
+    legal_moves = list(new_board.legal_moves)
+    assert len(legal_moves) > 0, "King must have at least one legal move"
+    
+    for move in legal_moves:
+        # All legal moves must be king moves
+        assert new_board.piece_at(move.from_square).piece_type == chess.KING
