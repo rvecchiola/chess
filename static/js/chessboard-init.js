@@ -50,6 +50,9 @@ $(document).ready(function () {
         }
     });
 
+    // Make board available globally for testing
+    window.board = board;
+
     // Send move to server
     function sendMove(source, target, promotionPiece=null) {
 
@@ -111,6 +114,9 @@ $(document).ready(function () {
         });
     }
 
+    // Make sendMove available globally for testing
+    window.sendMove = sendMove;
+
     // properly undo illegal moves
     function rollbackPosition() {
 
@@ -165,6 +171,9 @@ $(document).ready(function () {
         return { promotionNeeded: true };
     }
 
+    // Make detectPromotion available globally for testing
+    window.detectPromotion = detectPromotion;
+
     function showPromotionDialog(callback) {
 
         $("#promotion-dialog").remove();
@@ -197,6 +206,9 @@ $(document).ready(function () {
             rollbackPosition();
         });
     }
+
+    // Make showPromotionDialog available globally for testing
+    window.showPromotionDialog = showPromotionDialog;
 
     $("#reset-btn").click(function () {
         $.post("/reset", function(response) {

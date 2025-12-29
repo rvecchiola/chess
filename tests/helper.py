@@ -1,7 +1,8 @@
 from flask import json
 from playwright.sync_api import Page
+import requests
 
-def setup_board_position(page: Page, fen: str, move_history=None, 
+async def setup_board_position(page: Page, fen: str, move_history=None, 
                         captured_pieces=None, special_moves=None):
     """
     Helper to set exact board position using test endpoint.
@@ -25,22 +26,16 @@ def setup_board_position(page: Page, fen: str, move_history=None,
         "special_moves": special_moves or []
     }
     
-    # Set position in session via test endpoint
-    # This also sets the _test_position_set flag
-    page.evaluate(f"""
-        fetch('/test/set_position', {{
-            method: 'POST',
-            headers: {{'Content-Type': 'application/json'}},
-            body: JSON.stringify({payload})
-        }})
-        .then(r => r.json())
-    """)
-    
-    # Wait for endpoint to process
-    page.wait_for_timeout(300)
+    # Use page.request to make the call with the browser's session cookies
+    base_url = page.url.split('/')[0] + '//' + page.url.split('/')[2]
+    response = await page.request.post(f"{base_url}/test/set_position", data=json.dumps(payload), headers={"Content-Type": "application/json"})
+    print("Set position status:", response.status)
+    text = await response.text()
+    print("Set position text:", text)
+    assert response.status == 200
     
     # Reload page - home route will preserve our test position due to flag
-    page.reload()
+    page.goto(base_url)
     page.wait_for_selector("#board")
     # Extra wait to ensure Chessboard.js fully re-initializes with new pieces
     page.wait_for_timeout(3000)
