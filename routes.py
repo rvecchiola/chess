@@ -68,7 +68,8 @@ def register_routes(app):
 
                 return jsonify({
                     "status": "illegal",
-                    "message": reason
+                    "message": reason,
+                    "material": material_score(board)
                 })
             
             print("✅ Move is LEGAL, executing...")
@@ -201,7 +202,7 @@ def register_routes(app):
             print(f"   Error: {e}")
             print(f"   Move data: from={from_sq}, to={to_sq}, promotion={promotion}")
             print("--- END DEBUG ---\n")
-            return jsonify({"status": "illegal", "message": str(e)})
+            return jsonify({"status": "illegal", "message": str(e), "material": material_score(board)})
 
 
     @app.route("/reset", methods=["POST"])

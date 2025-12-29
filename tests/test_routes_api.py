@@ -1,7 +1,9 @@
 import pytest
 import json
 import chess
-from app import app  # make sure your Flask app is imported correctly
+from app import app
+from constants import PIECE_VALUES
+from tests.helper import set_position  # make sure your Flask app is imported correctly
 
 @pytest.fixture
 def client():
@@ -1155,3 +1157,48 @@ def test_fen_fullmove_number_increments(client):
     fen_parts = rv["fen"].split()
     fullmove_number = int(fen_parts[5])
     assert fullmove_number == 2
+
+#material something tests
+
+@pytest.mark.integration
+def test_material_returned_on_capture(client):
+    # White pawn captures black pawn
+    set_position(client, "8/8/8/3p4/4P3/8/8/8 w - - 0 1")
+    
+    rv = make_move(client, "e4", "d5")
+    
+    assert rv["status"] == "ok"
+    assert "material" in rv
+    assert rv["material"] == 100
+
+
+@pytest.mark.integration
+def test_material_unchanged_on_illegal_move(client):
+    set_position(client, chess.STARTING_FEN)
+    
+    rv = make_move(client, "e2", "e5")  # illegal
+    
+    assert rv["status"] == "illegal"
+    assert "material" not in rv or rv["material"] == 0
+
+
+@pytest.mark.integration
+def test_material_after_promotion(client):
+    set_position(client, "8/P7/8/8/8/8/8/8 w - - 0 1")
+    
+    rv = make_move(client, "a7", "a8", promotion="q")
+    
+    assert rv["status"] == "ok"
+    assert rv["material"] == PIECE_VALUES[chess.QUEEN]
+
+@pytest.mark.integration
+def test_castling_does_not_change_material(client):
+    set_position(client, chess.STARTING_FEN)
+    
+    make_move(client, "g1", "f3")
+    make_move(client, "g8", "f6")
+    make_move(client, "f1", "e2")
+    
+    rv = make_move(client, "e1", "g1")  # castle
+    
+    assert rv["material"] == 0
