@@ -85,8 +85,8 @@ def test_promotion_multiple_queens(client):
     assert len(queens) == 2
 
 
-def test_promotion_under_check(client):
-    """Test that promotion is legal"""
+def test_promotion_normal(client):
+    """Test that basic promotion works correctly"""
     set_position(client, '1nbqkbnr/P6p/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1')
     
     rv = make_move(client, "a7", "a8", promotion="q")
@@ -95,17 +95,16 @@ def test_promotion_under_check(client):
 
 def test_promotion_knight_gives_check(client):
     """Test underpromotion to knight delivers check"""
-    # After Nc8+, black king on a8 is in check but can escape to b8
-    set_position(client, 'k7/2P5/1K6/8/8/8/8/8 w - - 0 1')
+    # White pawn on e7, black king on c7 - promoting to knight gives check
+    set_position(client, '8/2k1P3/8/8/8/8/8/4K3 w - - 0 1')
     
-    rv = make_move(client, "c7", "c8", promotion="n")
+    rv = make_move(client, "e7", "e8", promotion="n")
     assert rv["status"] == "ok"
     board = chess.Board(rv["fen"])
     
-    # Knight on c8 doesn't give check to king on a8
-    # (Knight attacks b6, but not a8 which is 2 squares away)
-    # This position is actually NOT check - knight from c8 can't reach a8
-    assert board.is_checkmate() == False
+    # Knight on e8 gives check to king on c7
+    assert board.is_check() == True
+    assert board.is_checkmate() == False  # King can escape
 
 
 def test_promotion_flag_on_non_promotion_move(client):

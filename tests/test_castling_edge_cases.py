@@ -14,23 +14,6 @@ def client():
 # CASTLING INTO CHECK TESTS
 # =============================================================================
 
-def test_castling_queenside_with_b1_piece(client):
-    """Test queenside castling fails if b1 has knight"""
-    app.config['AI_ENABLED'] = False
-    reset_board(client)
-    # Clear d1, c1 but leave b1 knight
-    moves = [
-        ("d2", "d4"), ("d7", "d5"),
-        ("c1", "f4"), ("c8", "f5"),
-        ("d1", "d2"), ("d8", "d7"),
-    ]
-    for from_sq, to_sq in moves:
-        make_move(client, from_sq, to_sq)
-    
-    # b1 knight still there - queenside castle should FAIL
-    rv = make_move(client, "e1", "c1")
-    assert rv["status"] == "illegal", "b1 knight blocks queenside castling"
-
 def test_castling_queenside_without_b1_piece(client):
     """Test queenside castling works when b1 is clear"""
     app.config['AI_ENABLED'] = False

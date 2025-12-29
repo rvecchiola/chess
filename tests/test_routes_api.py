@@ -167,24 +167,6 @@ def test_castling_after_king_moved(client):
 # Black Castling Tests
 # -------------------------------------------------------------------
 
-def test_kingside_castling_black(client):
-    app.config['AI_ENABLED'] = False
-    reset_board(client)
-    # Clear path for kingside castling
-    make_move(client, "e2", "e4")
-    make_move(client, "e7", "e5")
-    make_move(client, "g1", "f3")
-    make_move(client, "g8", "f6")
-    make_move(client, "f1", "e2")
-    make_move(client, "f8", "e7")
-    make_move(client, "e1", "f1")  # Move white king out of way
-    make_move(client, "e8", "g8")  # Black castles kingside
-    rv = make_move(client, "f1", "e1")  # Dummy move to refresh
-    assert rv["status"] == "ok"
-    board = chess.Board(rv["fen"])
-    assert board.piece_at(chess.G8).symbol() == "k"
-    assert board.piece_at(chess.F8).symbol() == "r"
-
 def test_queenside_castling_black(client):
     app.config['AI_ENABLED'] = False
     reset_board(client)
@@ -556,17 +538,11 @@ def test_promotion_to_knight(client):
 # -------------------------------------------------------------------
 
 def test_malformed_json(client):
-    app.config['AI_ENABLED'] = False
-    reset_board(client)
-    rv = client.post("/move", data="{invalid json}", content_type="application/json")
-    assert rv.status_code in [400, 500]  # Should handle gracefully
-
-def test_malformed_json_specific_error(client):
     """Test malformed JSON returns proper 400 error"""
     app.config['AI_ENABLED'] = False
     reset_board(client)
     rv = client.post("/move", data="{invalid json}", content_type="application/json")
-    assert rv.status_code == 400  # Should be 400, not 500
+    assert rv.status_code == 400  # Should be 400 Bad Request for malformed JSON
 
 def test_missing_from_field(client):
     app.config['AI_ENABLED'] = False

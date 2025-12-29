@@ -88,13 +88,14 @@ def test_king_moves(new_board):
 def test_pinned_piece_cannot_move(new_board):
     # Bishop on d4 is pinned by rook on d8, king on d1
     new_board.set_fen("3r4/8/8/8/3B4/8/8/3K4 w - - 0 1")
-    # The bishop is absolutely pinned - any move exposes the king
-    # Only the king can move in this position
-    illegal_moves = ["d4c3", "d4e3", "d4c5", "d4e5", "d4d2", "d4d3", "d4d5", "d4d6", "d4d7", "d4d8"]
+    # The bishop is absolutely pinned and cannot move at all
+    # Bishops can only move diagonally, and any diagonal move exposes king to check
+    # The bishop also cannot move along the d-file (bishops don't move like that)
+    illegal_moves = ["d4c3", "d4e3", "d4c5", "d4e5", "d4b2", "d4f2", "d4b6", "d4f6", "d4a1", "d4g1", "d4a7", "d4g7"]
     for uci in illegal_moves:
         move = chess.Move.from_uci(uci)
         assert move not in new_board.legal_moves
-    # Only king moves are legal
+    # Only king can move
     king_moves = ["d1e2", "d1d2", "d1c2", "d1e1", "d1c1"]
     for uci in king_moves:
         move = chess.Move.from_uci(uci)
