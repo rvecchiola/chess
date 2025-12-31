@@ -139,19 +139,17 @@ def test_session_handles_concurrent_requests():
 def test_session_data_types_preserved(client):
     """Session preserves data types (lists, dicts)"""
     reset_board(client)
+    
+    # Set up position where white can capture
     make_move(client, "e2", "e4")
-    
-    # Make capture (white captures black pawn)
-    with client.session_transaction() as sess:
-        sess['fen'] = "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1"
-    
     make_move(client, "d7", "d5")
-    rv = make_move(client, "d4", "d5")
+    rv = make_move(client, "e4", "d5")  # White captures black pawn
     
     # Verify types on successful move response
     assert isinstance(rv["move_history"], list)
     assert isinstance(rv["captured_pieces"], dict)
     assert isinstance(rv["captured_pieces"]["white"], list)
+    assert len(rv["captured_pieces"]["white"]) == 1  # Captured one pawn
 
 def test_session_size_reasonable_after_long_game(client):
     """Session file size stays reasonable after many moves"""
