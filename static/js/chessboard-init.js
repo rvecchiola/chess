@@ -377,26 +377,32 @@ $(document).ready(function () {
     function updatePositionEvaluation(evalCp) {
         const el = $("#position-eval");
 
-        // Treat small values as equal
-        if (Math.abs(evalCp) < 30) {
-            el
-                .text("≈ 0.0")
-                .removeClass("material-white material-black");
+        if (evalCp === 0 || evalCp === null || evalCp === undefined) {
+            el.text("≈ 0.0 (Equal)");
             return;
         }
 
-        const score = (evalCp / 100).toFixed(1);
+        const pawns = (evalCp / 100).toFixed(2);
+        const label = formatEvaluation(evalCp);
+
+        el.text(`${pawns} (${label})`);
+    }
+
+    function formatEvaluation(evalCp) {
+        const abs = Math.abs(evalCp);
+
+        if (abs < 30) {
+            return "Equal";
+        }
 
         if (evalCp > 0) {
-            el
-                .text(`+${score}`)
-                .removeClass("material-black")
-                .addClass("material-white");
+            if (abs >= 300) return "White Winning";
+            if (abs >= 120) return "White Better";
+            return "White Slightly Better";
         } else {
-            el
-                .text(score)
-                .removeClass("material-white")
-                .addClass("material-black");
+            if (abs >= 300) return "Black Winning";
+            if (abs >= 120) return "Black Better";
+            return "Black Slightly Better";
         }
     }
 });
