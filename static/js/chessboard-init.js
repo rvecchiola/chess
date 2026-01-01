@@ -87,6 +87,7 @@ $(document).ready(function () {
                     updateMoveHistory(response.move_history);
                     updateCaptured(response.captured_pieces);
                     updateMaterialAdvantage(response.material);
+                    updatePositionEvaluation(response.evaluation);
                     updateErrorMessage("");  // Clear any previous error
 
                 } else {
@@ -224,6 +225,7 @@ $(document).ready(function () {
                 updateCaptured({ white: [], black: [] });
                 updateErrorMessage("");  // Clear error on reset
                 updateMaterialAdvantage(0);
+                updatePositionEvaluation(0);
             }
         });
     });
@@ -369,6 +371,32 @@ $(document).ready(function () {
             .text(`Black +${pawns}`)
             .removeClass("material-white")
             .addClass("material-black");
+        }
+    }
+
+    function updatePositionEvaluation(evalCp) {
+        const el = $("#position-eval");
+
+        // Treat small values as equal
+        if (Math.abs(evalCp) < 30) {
+            el
+                .text("≈ 0.0")
+                .removeClass("material-white material-black");
+            return;
+        }
+
+        const score = (evalCp / 100).toFixed(1);
+
+        if (evalCp > 0) {
+            el
+                .text(`+${score}`)
+                .removeClass("material-black")
+                .addClass("material-white");
+        } else {
+            el
+                .text(score)
+                .removeClass("material-white")
+                .addClass("material-black");
         }
     }
 });

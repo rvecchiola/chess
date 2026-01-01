@@ -13,12 +13,18 @@
     <div class="chess-app">
         <div class="board-container">
             <div id="board"></div>
+
+            <div class="board-controls">
+                <div id="game-status" class="status-card">{{ status }}</div>
+                <div id="error-message" class="error"></div>
+
+                <div class="board-buttons">
+                    <button id="reset-btn">♻ New Game</button>
+                </div>
+            </div>
         </div>
 
         <div class="side-panel">
-            <div id="game-status" class="status-card">{{ status }}</div>
-
-            <div id="error-message" class="error"></div>
             <div class="card">
                 <h3>Special Moves</h3>
 
@@ -34,7 +40,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="card">
                 <h3>Captured Pieces</h3>
                 <div id="captured-pieces">
@@ -50,18 +55,34 @@
             </div>
             <div class="card">
                 <h3>Position Summary</h3>
-
                 <div class="position-row">
-                    <span class="label">Material:</span>
+                    <span class="label material-header">
+                        Material
+                        <span class="tooltip-icon" tabindex="0">ⓘ
+                            <span class="tooltip-text">
+                                Material shows the difference in piece value only
+                                (pawns = 1, knights/bishops = 3, rooks = 5, queen = 9).
+                                It does not consider position or king safety.
+                            </span>
+                        </span>
+                    </span>
                     <span id="material-advantage">Even</span>
                 </div>
-
                 <div class="position-row">
-                    <span class="label">Evaluation:</span>
-                    <span id="position-eval">0.0</span>
+                    <span class="label material-header">
+                        Evaluation
+                        <span class="tooltip-icon" tabindex="0">ⓘ
+                            <span class="tooltip-text">
+                                Evaluation is the engine’s assessment of the position,
+                                combining material, piece activity, king safety, and structure.
+                                Positive favors White, negative favors Black.
+                            </span>
+                        </span>
+                    </span>
+                    <span id="position-eval">≈ 0.0</span>
                 </div>
             </div>
-            <div class="card">
+            <div class="card move-history-card">
                 <h3>Move History</h3>
 
                 <table id="move-history" class="move-table">
@@ -75,8 +96,6 @@
                     <tbody></tbody>
                 </table>
             </div>
-
-            <button id="reset-btn">♻ New Game</button>
         </div>
     </div>
 

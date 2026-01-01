@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify, session
 import chess
 import random
 
-from ai import choose_ai_move, material_score
+from ai import choose_ai_move, material_score, evaluate_board
 from helpers import explain_illegal_move, get_game_state, init_game, save_game_state
 
 # -------------------------------------------------------------------
@@ -88,7 +88,8 @@ def register_routes(app):
                 return jsonify({
                     "status": "illegal",
                     "message": reason,
-                    "material": material_score(board)
+                    "material": material_score(board),
+                    "evaluation": evaluate_board(board)
                 })
             
             print("Move is LEGAL, executing...")
@@ -195,11 +196,13 @@ def register_routes(app):
             save_game_state(board, move_history, captured_pieces, special_moves)
 
             material = material_score(board)
+            evaluation = evaluate_board(board)
 
             print(f"\nFinal board state: {board.fen()}")
             print(f"Move history: {move_history}")
             print(f"Game over: {board.is_game_over()}")
             print(f"material score: {material}")
+            print(f"evaluation score: {evaluation}")
             print("--- END DEBUG ---\n")
 
             return jsonify({
@@ -216,7 +219,8 @@ def register_routes(app):
                 "game_over": board.is_game_over(),
                 "move_history": move_history,
                 "captured_pieces": captured_pieces,
-                "material": material
+                "material": material,
+                "evaluation": evaluation
             })
 
         except Exception as e:
@@ -224,7 +228,12 @@ def register_routes(app):
             print(f"   Error: {e}")
             print(f"   Move data: from={from_sq}, to={to_sq}, promotion={promotion}")
             print("--- END DEBUG ---\n")
-            return jsonify({"status": "illegal", "message": str(e), "material": material_score(board)})
+            return jsonify({
+                "status": "illegal", 
+                "message": str(e), 
+                "material": material_score(board),
+                "evaluation": evaluate_board(board)
+            })
 
 
     @app.route("/reset", methods=["POST"])
@@ -248,7 +257,8 @@ def register_routes(app):
             "game_over": False,
             "move_history": [],
             "captured_pieces": {'white': [], 'black': []},
-            "material": 0
+            "material": 0,
+            "evaluation": 0
         })
     
     @app.route("/test/set_position", methods=["POST"])
@@ -302,5 +312,6 @@ def register_routes(app):
             "checkmate": board.is_checkmate(),
             "stalemate": board.is_stalemate(),
             "game_over": board.is_game_over(),
-            "material":0
+            "material":0,
+            "evaluation": evaluate_board(board)
         })
