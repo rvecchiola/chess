@@ -20,6 +20,10 @@ class DevelopmentConfig(BaseConfig):
     # Use fixed key for development - sessions must persist across requests
     # DO NOT use secrets.token_hex() here - it generates a new key on each import!
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+    SQLALCHEMY_DATABASE_URI = (
+    "mysql+pymysql://chess_user:strongpassword@localhost/chess_app_dev"
+)
+
 
 class TestingConfig(BaseConfig):
     DEBUG = True
